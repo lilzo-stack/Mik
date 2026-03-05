@@ -28,6 +28,13 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
