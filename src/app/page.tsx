@@ -12,24 +12,28 @@ interface Message {
   timestamp: Date;
 }
 
-// Simulated AI response function (placeholder for future API integration)
-async function sendMessageToAI(message: string): Promise<string> {
-  // TODO: Connect to Gemini API or other AI backend
-  console.log("Sending to AI:", message);
-  
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-  
-  // Sample responses for demo
-  const responses = [
-    "Hello! I'm Jarvis, your AI assistant. How can I help you today?",
-    "That's an interesting question. Let me think about that for you.",
-    "I understand. Here's what I can tell you about that topic...",
-    "Great question! I'd be happy to help with that.",
-    "I'm processing your request. Based on my analysis, here's what I found...",
-  ];
-  
-  return responses[Math.floor(Math.random() * responses.length)];
+// Send message to OpenRouter AI via API route
+async function sendMessageToAI(message: string, history: { role: string; content: string }[]): Promise<string> {
+  const response = await fetch("/api/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      messages: [
+        ...history,
+        { role: "user", content: message }
+      ]
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to get AI response");
+  }
+
+  const data = await response.json();
+  return data.response;
 }
 
 export default function Home() {
@@ -66,12 +70,19 @@ export default function Home() {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setIsLoading(true);
 
     try {
+      // Convert message history to API format
+      const history = updatedMessages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
       // Get AI response
-      const response = await sendMessageToAI(content);
+      const response = await sendMessageToAI(content, history.slice(0, -1));
 
       // Add AI message
       const aiMessage: Message = {
@@ -87,7 +98,7 @@ export default function Home() {
       // Add error message
       const errorMessage: Message = {
         role: "assistant",
-        content: "I apologize, but I encountered an error. Please try again.",
+        content: "I apologize, but I encountered an error. Please ensure the OpenRouter API key is configured.",
         timestamp: new Date(),
       };
 
