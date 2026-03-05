@@ -33,16 +33,21 @@ async function sendMessageToAI(message: string): Promise<string> {
 }
 
 export default function Home() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: "Hello, I'm Jarvis. How can I assist you today?",
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  // Initialize welcome message on client side only to avoid hydration mismatch
+  useEffect(() => {
+    setMessages([
+      {
+        role: "assistant",
+        content: "Hello, I'm Jarvis. How can I assist you today?",
+        timestamp: new Date(),
+      },
+    ]);
+  }, []);
 
   // Auto-scroll to bottom when messages change
   const scrollToBottom = () => {
